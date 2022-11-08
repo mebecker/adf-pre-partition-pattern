@@ -1,0 +1,37 @@
+{
+	"name": "partitioned_out",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "yourtargetstorageaccount",
+			"type": "LinkedServiceReference"
+		},
+		"parameters": {
+			"directory": {
+				"type": "string"
+			},
+			"filesystem": {
+				"type": "string"
+			}
+		},
+		"annotations": [],
+		"type": "DelimitedText",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"folderPath": {
+					"value": "@dataset().directory",
+					"type": "Expression"
+				},
+				"fileSystem": {
+					"value": "@dataset().filesystem",
+					"type": "Expression"
+				}
+			},
+			"columnDelimiter": ",",
+			"escapeChar": "\\",
+			"firstRowAsHeader": true,
+			"quoteChar": "\""
+		},
+		"schema": []
+	}
+}

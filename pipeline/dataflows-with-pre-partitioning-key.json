@@ -1,0 +1,206 @@
+{
+	"name": "dataflows-with-pre-partitioning-key",
+	"properties": {
+		"activities": [
+			{
+				"name": "partition-source-data",
+				"type": "ExecuteDataFlow",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataflow": {
+						"referenceName": "partition_source_data",
+						"type": "DataFlowReference",
+						"datasetParameters": {
+							"sink1": {
+								"directory": {
+									"value": "@variables('partitionedDataDirectory')",
+									"type": "Expression"
+								},
+								"filesystem": {
+									"value": "@variables('filesystem')",
+									"type": "Expression"
+								}
+							}
+						}
+					},
+					"integrationRuntime": {
+						"referenceName": "EastUS2AzureIntegrationRuntime",
+						"type": "IntegrationRuntimeReference"
+					},
+					"traceLevel": "Fine",
+					"continuationSettings": {
+						"customizedCheckpointKey": "27721a38-f65b-4335-bb62-f3eceda8a28a"
+					}
+				}
+			},
+			{
+				"name": "get-partition-info",
+				"type": "GetMetadata",
+				"dependsOn": [
+					{
+						"activity": "partition-source-data",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataset": {
+						"referenceName": "partitioned_out",
+						"type": "DatasetReference",
+						"parameters": {
+							"directory": {
+								"value": "@variables('partitionedDataDirectory')",
+								"type": "Expression"
+							},
+							"filesystem": {
+								"value": "@variables('filesystem')",
+								"type": "Expression"
+							}
+						}
+					},
+					"fieldList": [
+						"childItems"
+					],
+					"storeSettings": {
+						"type": "AzureBlobFSReadSettings",
+						"recursive": true,
+						"enablePartitionDiscovery": false
+					},
+					"formatSettings": {
+						"type": "DelimitedTextReadSettings"
+					}
+				}
+			},
+			{
+				"name": "for-each-partition",
+				"type": "ForEach",
+				"dependsOn": [
+					{
+						"activity": "get-partition-info",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@activity('get-partition-info').output.childItems",
+						"type": "Expression"
+					},
+					"activities": [
+						{
+							"name": "if-partition-folder",
+							"type": "IfCondition",
+							"dependsOn": [],
+							"userProperties": [],
+							"typeProperties": {
+								"expression": {
+									"value": "@equals(item().type, 'Folder')",
+									"type": "Expression"
+								},
+								"ifTrueActivities": [
+									{
+										"name": "process-partition",
+										"type": "ExecuteDataFlow",
+										"dependsOn": [],
+										"policy": {
+											"timeout": "0.12:00:00",
+											"retry": 0,
+											"retryIntervalInSeconds": 30,
+											"secureOutput": false,
+											"secureInput": false
+										},
+										"userProperties": [],
+										"typeProperties": {
+											"dataflow": {
+												"referenceName": "process_partition",
+												"type": "DataFlowReference",
+												"parameters": {
+													"vendor": {
+														"value": "'@{split(item().name, '=')[1]}'",
+														"type": "Expression"
+													},
+													"partitionedDataDirectory": {
+														"value": "'@{variables('partitionedDataDirectory')}'",
+														"type": "Expression"
+													}
+												},
+												"datasetParameters": {
+													"source1": {
+														"directory": {
+															"value": "@concat(variables('partitionedDataDirectory'), '/', item().name)",
+															"type": "Expression"
+														},
+														"filesystem": {
+															"value": "@variables('filesystem')",
+															"type": "Expression"
+														}
+													},
+													"sink1": {
+														"directory": {
+															"value": "@concat(variables('processedDataDirectory'), '/', item().name)",
+															"type": "Expression"
+														},
+														"filesystem": {
+															"value": "@variables('filesystem')",
+															"type": "Expression"
+														}
+													}
+												}
+											},
+											"integrationRuntime": {
+												"referenceName": "EastUS2AzureIntegrationRuntime",
+												"type": "IntegrationRuntimeReference"
+											},
+											"traceLevel": "Fine"
+										}
+									}
+								]
+							}
+						}
+					]
+				}
+			}
+		],
+		"variables": {
+			"rawDataDirectory": {
+				"type": "String",
+				"defaultValue": "nytaxi-subset-raw"
+			},
+			"partitionedDataDirectory": {
+				"type": "String",
+				"defaultValue": "nytaxi-partitioned"
+			},
+			"processedDataDirectory": {
+				"type": "String",
+				"defaultValue": "nytaxi-processed"
+			},
+			"filesystem": {
+				"type": "String",
+				"defaultValue": "data"
+			}
+		},
+		"folder": {
+			"name": "key-partition"
+		},
+		"annotations": []
+	}
+}

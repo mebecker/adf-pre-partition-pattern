@@ -1,0 +1,14 @@
+{
+	"name": "yourtargetstorageaccount",
+	"properties": {
+		"annotations": [],
+		"type": "AzureBlobFS",
+		"typeProperties": {
+			"url": "https://yourtargetstorageaccount.dfs.core.windows.net/"
+		},
+		"connectVia": {
+			"referenceName": "EastUS2AzureIntegrationRuntime",
+			"type": "IntegrationRuntimeReference"
+		}
+	}
+}

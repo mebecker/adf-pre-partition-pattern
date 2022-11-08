@@ -1,0 +1,75 @@
+{
+	"name": "partition_source_data",
+	"properties": {
+		"folder": {
+			"name": "key-partition"
+		},
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "nytaxi_in",
+						"type": "DatasetReference"
+					},
+					"name": "source1"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "partitioned_out",
+						"type": "DatasetReference"
+					},
+					"name": "sink1"
+				}
+			],
+			"transformations": [],
+			"scriptLines": [
+				"source(output(",
+				"          vendorID as string,",
+				"          tpepPickupDateTime as timestamp,",
+				"          tpepDropoffDateTime as timestamp,",
+				"          passengerCount as integer,",
+				"          tripDistance as double,",
+				"          puLocationId as string,",
+				"          doLocationId as string,",
+				"          startLon as double,",
+				"          startLat as double,",
+				"          endLon as double,",
+				"          endLat as double,",
+				"          rateCodeId as integer,",
+				"          storeAndFwdFlag as string,",
+				"          paymentType as string,",
+				"          fareAmount as double,",
+				"          extra as double,",
+				"          mtaTax as double,",
+				"          improvementSurcharge as string,",
+				"          tipAmount as double,",
+				"          tollsAmount as double,",
+				"          totalAmount as double,",
+				"          puYear as string,",
+				"          puMonth as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false,",
+				"     enableCdc: true,",
+				"     mode: 'read',",
+				"     skipInitialLoad: false,",
+				"     format: 'parquet') ~> source1",
+				"source1 sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     umask: 0022,",
+				"     preCommands: [],",
+				"     postCommands: [],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     partitionBy('key',",
+				"          0,",
+				"          vendorID",
+				"     )) ~> sink1"
+			]
+		}
+	}
+}

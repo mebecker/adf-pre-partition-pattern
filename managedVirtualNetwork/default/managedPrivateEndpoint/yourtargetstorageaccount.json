@@ -1,0 +1,7 @@
+{
+	"name": "yourtargetstorageaccount",
+	"properties": {
+		"privateLinkResourceId": "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/rg-paas-shared-eastus2/providers/Microsoft.Storage/storageAccounts/yourtargetstorageaccount",
+		"groupId": "dfs"
+	}
+}
